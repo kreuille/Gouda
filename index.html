@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Kiro</title>
 
+    <!-- Google Fonts preconnect -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
     <!-- PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1a1a2e">
@@ -15,6 +19,18 @@
     <link rel="apple-touch-icon" href="icons/icon-192.png">
 
     <link rel="stylesheet" href="css/style.css">
+    <!-- Apply theme before paint to avoid flash -->
+    <script>
+      (function(){
+        var t = localStorage.getItem('minou-theme');
+        // Default is dark if never set
+        if(!t || t === 'dark') document.documentElement.classList.add('dark-init');
+        if(!t) localStorage.setItem('minou-theme','dark');
+      })();
+    </script>
+    <style>
+      html.dark-init body { background: #080709; }
+    </style>
 </head>
 <body>
     <button id="sidebar-toggle" class="sidebar-toggle" title="Masquer le panneau">
