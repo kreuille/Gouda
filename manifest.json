@@ -1,21 +1,27 @@
 {
-  "short_name": "Gouda",
-  "name": "Gouda - Kiro AI",
+  "name": "Kiro – Chat IA",
+  "short_name": "Kiro",
+  "description": "Interface multi-IA avec backup GitHub",
+  "start_url": "/Gouda/",
+  "scope": "/Gouda/",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#1a1a2e",
+  "orientation": "any",
   "icons": [
     {
-      "src": "https://raw.githubusercontent.com/kreuille/Gouda/main/favicon.png",
+      "src": "icons/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "https://raw.githubusercontent.com/kreuille/Gouda/main/favicon.png",
+      "src": "icons/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ],
-  "start_url": "/Gouda/",
-  "display": "standalone",
-  "theme_color": "#1a1a1a",
-  "background_color": "#ffffff",
-  "scope": "/Gouda/"
+  "categories": ["productivity", "utilities"],
+  "lang": "fr"
 }
