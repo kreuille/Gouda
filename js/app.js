@@ -629,11 +629,71 @@ document.querySelectorAll('.sp-toggle').forEach(toggle => {
 const sidebarToggle = document.getElementById('sidebar-toggle');
 const sidebar = document.getElementById('sidebar');
 
+// ── Overlay mobile ──
+const sidebarOverlay = document.createElement('div');
+sidebarOverlay.className = 'sidebar-overlay';
+document.body.appendChild(sidebarOverlay);
+
+function isMobile() { return window.innerWidth <= 768; }
+
+function openSidebar() {
+    if (isMobile()) {
+        sidebar.classList.add('open');
+        sidebar.classList.remove('collapsed');
+        sidebarOverlay.classList.add('active');
+    } else {
+        sidebar.classList.remove('collapsed');
+        sidebarToggle.classList.remove('collapsed');
+    }
+    sidebarToggle.title = 'Masquer le panneau';
+}
+
+function closeSidebar() {
+    if (isMobile()) {
+        sidebar.classList.remove('open');
+        sidebarOverlay.classList.remove('active');
+    } else {
+        sidebar.classList.add('collapsed');
+        sidebarToggle.classList.add('collapsed');
+    }
+    sidebarToggle.title = 'Afficher le panneau';
+}
+
 sidebarToggle.addEventListener('click', () => {
-    const collapsed = sidebar.classList.toggle('collapsed');
-    sidebarToggle.classList.toggle('collapsed', collapsed);
-    sidebarToggle.title = collapsed ? 'Afficher le panneau' : 'Masquer le panneau';
+    if (isMobile()) {
+        sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+    } else {
+        const collapsed = sidebar.classList.toggle('collapsed');
+        sidebarToggle.classList.toggle('collapsed', collapsed);
+        sidebarToggle.title = collapsed ? 'Afficher le panneau' : 'Masquer le panneau';
+    }
 });
+
+// Fermer en cliquant sur l'overlay
+sidebarOverlay.addEventListener('click', closeSidebar);
+
+// Fermer la sidebar après sélection d'une conversation sur mobile
+document.getElementById('conv-list').addEventListener('click', () => {
+    if (isMobile()) closeSidebar();
+});
+document.getElementById('new-chat-btn').addEventListener('click', () => {
+    if (isMobile()) closeSidebar();
+});
+
+// Swipe gauche pour fermer la sidebar sur mobile
+(function initSwipeClose() {
+    let startX = 0, startY = 0;
+    sidebar.addEventListener('touchstart', e => {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+    }, { passive: true });
+    sidebar.addEventListener('touchend', e => {
+        if (!isMobile()) return;
+        const dx = e.changedTouches[0].clientX - startX;
+        const dy = Math.abs(e.changedTouches[0].clientY - startY);
+        if (dx < -60 && dy < 50) closeSidebar();
+    }, { passive: true });
+})();
 
 // --- Toggle recherche web ---
 webSearchToggle.addEventListener('click', () => {
@@ -3308,5 +3368,75 @@ function attachLightboxToImg(imgEl) {
     imgEl.addEventListener('click', () => openLightbox(imgEl.src));
 }
 
-// Focus initial
-promptInput.focus();
+// ── Mobile : bouton pour afficher/masquer la barre de modèles ──
+(function initMobileModelToggle() {
+    const modelBar = document.getElementById('model-bar');
+    const tokenBar = document.getElementById('token-bar');
+    if (!modelBar) return;
+
+    // Créer le bouton toggle
+    const btn = document.createElement('button');
+    btn.id = 'mobile-model-toggle';
+    btn.title = 'Modèles & options';
+    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg> <span id="mobile-model-label">Modèle</span>`;
+
+    const style = document.createElement('style');
+    style.textContent = `
+      #mobile-model-toggle {
+        display: none;
+        position: absolute;
+        top: calc(6px + env(safe-area-inset-top, 0px));
+        right: 10px;
+        background: var(--bg-sidebar);
+        border: 1px solid var(--border-input);
+        border-radius: 8px;
+        padding: 5px 10px;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        cursor: pointer;
+        z-index: 120;
+        align-items: center;
+        gap: 5px;
+        white-space: nowrap;
+        max-width: 160px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      #mobile-model-toggle svg { flex-shrink:0; }
+      #mobile-model-label { overflow:hidden; text-overflow:ellipsis; max-width:110px; display:inline-block; vertical-align:middle; }
+      @media (max-width:768px) {
+        #mobile-model-toggle { display: flex !important; }
+        #model-bar { display: none; }
+        #model-bar.mobile-open { display: flex !important; }
+        #token-bar { display: none; }
+      }
+    `;
+    document.head.appendChild(style);
+    document.body.appendChild(btn);
+
+    // Toggle
+    btn.addEventListener('click', () => {
+        const open = modelBar.classList.toggle('mobile-open');
+        if (tokenBar) tokenBar.style.display = open ? 'flex' : 'none';
+    });
+
+    // Mettre à jour le label avec le modèle actif
+    function updateMobileLabel() {
+        const sel = document.getElementById('model-select');
+        const imgSel = document.getElementById('image-model-select');
+        const label = document.getElementById('mobile-model-label');
+        if (!sel || !label) return;
+        const val = sel.value || imgSel?.value || '';
+        const opt = sel.options[sel.selectedIndex];
+        const txt = opt && opt.value ? opt.text : (imgSel?.options[imgSel.selectedIndex]?.text || 'Modèle');
+        label.textContent = txt.length > 18 ? txt.slice(0, 17) + '…' : txt;
+    }
+    document.getElementById('model-select')?.addEventListener('change', updateMobileLabel);
+    document.getElementById('image-model-select')?.addEventListener('change', updateMobileLabel);
+    // Mise à jour initiale différée
+    setTimeout(updateMobileLabel, 800);
+})();
+
+// Focus initial (desktop seulement)
+if (window.innerWidth > 768) promptInput.focus();
